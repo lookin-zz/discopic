@@ -15,6 +15,7 @@ class DiscoPicApp {
         this.elements = {
             // Buttons
             settingsBtn: document.getElementById('settingsBtn'),
+            demoBtn: document.getElementById('demoBtn'),
             refreshBtn: document.getElementById('refreshBtn'),
             closeSettingsBtn: document.getElementById('closeSettingsBtn'),
             cancelSettingsBtn: document.getElementById('cancelSettingsBtn'),
@@ -91,6 +92,9 @@ class DiscoPicApp {
 
         // Click overlay to close modal
         this.elements.settingsModal.querySelector('.modal-overlay').addEventListener('click', () => this.closeSettings());
+
+        // Demo mode
+        this.elements.demoBtn.addEventListener('click', () => this.loadDemoData());
 
         // Refresh
         this.elements.refreshBtn.addEventListener('click', () => this.refresh());
@@ -235,6 +239,46 @@ class DiscoPicApp {
             this.isLoading = false;
             this.showLoading(false);
         }
+    }
+
+    /**
+     * Load demo data (for testing without API key)
+     */
+    loadDemoData() {
+        this.updateStatus('Loading demo data...');
+        this.hideError();
+
+        // Generate realistic mock quotes
+        const mockQuotes = [
+            // BTC/USDT
+            { exchange: 'BINANCE', pair: 'BTC/USDT', ask: 42150.50, bid: 42148.20, askVolume: 2.5, bidVolume: 3.1 },
+            { exchange: 'COINBASE', pair: 'BTC/USDT', ask: 42195.75, bid: 42193.40, askVolume: 1.8, bidVolume: 2.2 },
+            { exchange: 'KRAKEN', pair: 'BTC/USDT', ask: 42168.30, bid: 42166.10, askVolume: 3.2, bidVolume: 2.9 },
+            { exchange: 'BITFINEX', pair: 'BTC/USDT', ask: 42180.90, bid: 42178.50, askVolume: 2.1, bidVolume: 2.5 },
+
+            // ETH/USDT
+            { exchange: 'BINANCE', pair: 'ETH/USDT', ask: 2245.80, bid: 2245.20, askVolume: 15.5, bidVolume: 18.2 },
+            { exchange: 'COINBASE', pair: 'ETH/USDT', ask: 2252.30, bid: 2251.70, askVolume: 12.3, bidVolume: 14.7 },
+            { exchange: 'KRAKEN', pair: 'ETH/USDT', ask: 2248.60, bid: 2248.00, askVolume: 16.8, bidVolume: 15.1 },
+            { exchange: 'BITFINEX', pair: 'ETH/USDT', ask: 2250.40, bid: 2249.80, askVolume: 13.2, bidVolume: 16.5 },
+
+            // BNB/USDT
+            { exchange: 'BINANCE', pair: 'BNB/USDT', ask: 312.45, bid: 312.20, askVolume: 45.2, bidVolume: 52.8 },
+            { exchange: 'COINBASE', pair: 'BNB/USDT', ask: 314.60, bid: 314.35, askVolume: 38.5, bidVolume: 41.2 },
+            { exchange: 'KRAKEN', pair: 'BNB/USDT', ask: 313.20, bid: 312.95, askVolume: 42.1, bidVolume: 48.6 },
+            { exchange: 'BITFINEX', pair: 'BNB/USDT', ask: 313.85, bid: 313.60, askVolume: 39.7, bidVolume: 44.3 }
+        ];
+
+        const fees = Config.get('fees');
+        const minProfit = parseFloat(this.elements.minProfitFilter.value) || 0;
+
+        // Calculate arbitrage opportunities from mock data
+        this.opportunities = Arbitrage.calculateOpportunities(mockQuotes, fees, minProfit);
+
+        // Update UI
+        this.applyFilters();
+        this.updateLastUpdate();
+        this.updateStatus(`Demo Mode - Found ${this.opportunities.length} opportunities`);
     }
 
     /**
