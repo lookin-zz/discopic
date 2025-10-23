@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discopic - Crypto Arbitrage Monitor</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">Discopic</h1>
+            <p class="tagline">Real-Time Crypto Arbitrage Monitor</p>
+            <div class="header-controls">
+                <button id="settingsBtn" class="btn btn-secondary" title="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m-9-9h6m6 0h6M4.22 4.22l4.24 4.24m7.08 0l4.24-4.24M4.22 19.78l4.24-4.24m7.08 0l4.24 4.24"></path>
+                    </svg>
+                    Settings
+                </button>
+                <button id="refreshBtn" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="container">
+            <div class="status-item">
+                <span class="status-label">Status:</span>
+                <span id="statusText" class="status-value">Ready</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Last Update:</span>
+                <span id="lastUpdateText" class="status-value">Never</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Opportunities:</span>
+                <span id="opportunityCount" class="status-value">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Auto-Refresh:</span>
+                <label class="toggle">
+                    <input type="checkbox" id="autoRefreshToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="pairFilter">Trading Pair:</label>
+                    <select id="pairFilter" class="filter-select">
+                        <option value="all">All Pairs</option>
+                        <option value="BTC/USDT">BTC/USDT</option>
+                        <option value="ETH/USDT">ETH/USDT</option>
+                        <option value="BNB/USDT">BNB/USDT</option>
+                        <option value="SOL/USDT">SOL/USDT</option>
+                        <option value="XRP/USDT">XRP/USDT</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="minProfitFilter">Min Profit %:</label>
+                    <input type="number" id="minProfitFilter" class="filter-input" value="0.5" min="0" step="0.1">
+                </div>
+                <div class="filter-group">
+                    <label for="sortBy">Sort By:</label>
+                    <select id="sortBy" class="filter-select">
+                        <option value="profit">Profit %</option>
+                        <option value="pair">Trading Pair</option>
+                        <option value="spread">Price Spread</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Arbitrage Table -->
+            <div class="table-container">
+                <table class="arbitrage-table">
+                    <thead>
+                        <tr>
+                            <th>Trading Pair</th>
+                            <th>Buy Exchange</th>
+                            <th>Buy Price</th>
+                            <th>Sell Exchange</th>
+                            <th>Sell Price</th>
+                            <th>Price Spread</th>
+                            <th>Gross Profit %</th>
+                            <th>Net Profit %</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="arbitrageTableBody">
+                        <tr class="empty-state">
+                            <td colspan="9">
+                                <div class="empty-message">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 6v6l4 2"></path>
+                                    </svg>
+                                    <p>No arbitrage opportunities yet</p>
+                                    <p class="empty-hint">Click "Refresh" or configure settings to start monitoring</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading-indicator hidden">
+                <div class="spinner"></div>
+                <p>Fetching market data...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message hidden">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span id="errorText"></span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close" id="closeSettingsBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="apiKeyInput">CoinAPI Key *</label>
+                    <input type="password" id="apiKeyInput" class="form-input" placeholder="Enter your CoinAPI key">
+                    <small class="form-hint">Get your free API key at <a href="https://www.coinapi.io/" target="_blank">coinapi.io</a></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="refreshInterval">Auto-Refresh Interval (seconds)</label>
+                    <input type="number" id="refreshInterval" class="form-input" value="30" min="10" max="300" step="5">
+                    <small class="form-hint">Recommended: 30-60 seconds to stay within API limits</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="defaultMinProfit">Default Min Profit %</label>
+                    <input type="number" id="defaultMinProfit" class="form-input" value="0.5" min="0" step="0.1">
+                </div>
+
+                <div class="form-section">
+                    <h3>Exchange Trading Fees (%)</h3>
+                    <div class="fee-grid">
+                        <div class="fee-item">
+                            <label for="feeBinance">Binance</label>
+                            <input type="number" id="feeBinance" class="form-input" value="0.1" min="0" step="0.01">
+                        </div>
+                        <div class="fee-item">
+                            <label for="feeCoinbase">Coinbase</label>
+                            <input type="number" id="feeCoinbase" class="form-input" value="0.6" min="0" step="0.01">
+                        </div>
+                        <div class="fee-item">
+                            <label for="feeKraken">Kraken</label>
+                            <input type="number" id="feeKraken" class="form-input" value="0.26" min="0" step="0.01">
+                        </div>
+                        <div class="fee-item">
+                            <label for="feeBitfinex">Bitfinex</label>
+                            <input type="number" id="feeBitfinex" class="form-input" value="0.2" min="0" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Trading Pairs to Monitor</h3>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="pair-checkbox" value="BTC/USDT" checked>
+                            <span>BTC/USDT</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="pair-checkbox" value="ETH/USDT" checked>
+                            <span>ETH/USDT</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="pair-checkbox" value="BNB/USDT" checked>
+                            <span>BNB/USDT</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="pair-checkbox" value="SOL/USDT">
+                            <span>SOL/USDT</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="pair-checkbox" value="XRP/USDT">
+                            <span>XRP/USDT</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="pair-checkbox" value="ADA/USDT">
+                            <span>ADA/USDT</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+                <button id="cancelSettingsBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Discopic. Data powered by CoinAPI. For informational purposes only.</p>
+            <p class="disclaimer">Cryptocurrency trading carries risk. Always do your own research.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/arbitrage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
